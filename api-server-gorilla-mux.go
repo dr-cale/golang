@@ -100,7 +100,7 @@ func getLokiLabels(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	selectedNamespace := vars["namespace"]
 
-	resp, err := http.Get("http://loki-grafana.loki:80/loki/api/v1/series?match[]={namespace=\"" + selectedNamespace + "\"}")
+	resp, err := http.Get("http://loki.loki:3100/loki/api/v1/series?match[]={namespace=\"" + selectedNamespace + "\"}")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -253,7 +253,7 @@ func getLokiLogs(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Println(selectedAppLabel, selectedNamespace, selectedStartTime, selectedEndTime)
 
-	resp, err := http.Get("http://loki-grafana.loki:80/loki/api/v1/query_range?query={namespace=\"" + selectedNamespace + "\",app=\"" + selectedAppLabel + "\"}&start=" + selectedStartTime + "&end=" + selectedEndTime)
+	resp, err := http.Get("http://loki.loki:3100/loki/api/v1/query_range?query={namespace=\"" + selectedNamespace + "\",app=\"" + selectedAppLabel + "\"}&start=" + selectedStartTime + "&end=" + selectedEndTime)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -295,18 +295,29 @@ func getCurrentTimestamp() int64 {
 
 func handleRequests() {
 	// creates a new instance of a mux router
+	//myRouter := mux.NewRouter().StrictSlash(true)
+	// replace http.HandleFunc with myRouter.HandleFunc
+	//myRouter.HandleFunc("/", homePage)
+	//myRouter.HandleFunc("/articles", returnAllArticles)
+	//myRouter.HandleFunc("/article", createNewArticle).Methods("POST")
+	//myRouter.HandleFunc("/article/{id}", deleteArticle).Methods("DELETE")
+	//myRouter.HandleFunc("/article/{id}", returnSingleArticle)
+	//myRouter.HandleFunc("/getLokiLabels/{namespace}", getLokiLabels)
+	//myRouter.HandleFunc("/getLokiLogs/{app}", getLokiLogs)
+	//log.Fatal(http.ListenAndServe(":9003", myRouter))
+
 	myRouter := mux.NewRouter().StrictSlash(true)
 	// replace http.HandleFunc with myRouter.HandleFunc
 	myRouter.HandleFunc("/", homePage)
-	//mySubRouter := myRouter.PathPrefix("/logs/").Subrouter()
+	mySubRouter := myRouter.PathPrefix("/logs/").Subrouter()
 	myRouter.HandleFunc("/articles", returnAllArticles)
 	myRouter.HandleFunc("/article", createNewArticle).Methods("POST")
 	myRouter.HandleFunc("/article/{id}", deleteArticle).Methods("DELETE")
 	myRouter.HandleFunc("/article/{id}", returnSingleArticle)
-	//mySubRouter.HandleFunc("/get-loki-labels/{namespace}", getLokiLabels)
-	//mySubRouter.HandleFunc("/get-loki-logs/{app}", getLokiLogs)
+	mySubRouter.HandleFunc("/get-loki-labels/{namespace}", getLokiLabels)
+	mySubRouter.HandleFunc("/get-loki-logs/{app}", getLokiLogs)
 	//http.Handle("/", myRouter)
-	log.Fatal(http.ListenAndServe(":9004", myRouter))
+	log.Fatal(http.ListenAndServe(":8080", myRouter))
 }
 
 func main() {
